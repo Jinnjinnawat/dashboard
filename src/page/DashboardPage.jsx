@@ -3,7 +3,7 @@ import { ShoppingBag, Wallet, Clock, Users } from "lucide-react";
 import Sidebar from "../components/Sidebar.jsx";
 import Topbar from "../components/Topbar.jsx";
 import StatCard from "../components/StatCard.jsx";
-import DataTable from "../components/DataTableNotebook.jsx";
+import DataTable from "../components/DataTable.jsx";
 import { orders, summary } from "../data/orders.js";
 
 export default function App() {
