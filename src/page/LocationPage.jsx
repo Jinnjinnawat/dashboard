@@ -7,10 +7,21 @@ const COLUMNS = [
 
 export default function LocationPage() {
   return (
-    <DataTable
-      columns={COLUMNS}
-      apiUrl="http://localhost:5000/api/location"
-      title="รายการ Location"
-    />
+    <div className="flex min-h-screen bg-surface">
+
+      <div className="flex-1 min-w-0">
+
+        <main className="px-5 lg:px-8 py-8">
+          <DataTable
+            columns={COLUMNS}
+            apiUrl="http://localhost:5000/api/location"
+            title="รายการ Location"
+            editable={true}
+            editFields={COLUMNS}
+            deleteTitleKey="LocationID"
+          />
+        </main>
+      </div>
+    </div>
   );
 }

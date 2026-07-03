@@ -7,4 +7,4 @@ const notebookContractSchema = new mongoose.Schema({
     StartDate: String,
     EndDate: String,
 })
-export default mongoose.model('notebookContract', notebookContractSchema)
+export default mongoose.model('notebookContract', notebookContractSchema, 'notebookcontract')

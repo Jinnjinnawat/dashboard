@@ -4,7 +4,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import Notebook from './src/models/notebook.js'
 import Location from './src/models/Location.js'
-
+import NotebookContract from "./src/models/notebookcontract.js";
 dotenv.config()
 
 const app = express()
@@ -46,7 +46,29 @@ const getLocations = async(req, res) => {
 
 app.get('/api/location', getLocations)
 
+app.get('/api/notebookcontract',
+    async(req, res) => {
+        try {
+            const contracts = await NotebookContract.find()
+            res.json(contracts)
+        } catch (err) {
+            console.error('Failed to fetch notebook contracts:', err.message)
+            res.status(500).json({
+                message: 'Failed to fetch notebook contracts',
+                error: err.message,
+            })
+        }
+    })
 
+app.post('/api/notebook', async(req, res) => {
+    try {
+        const notebook = new Notebook(req.body)
+        const saved = await notebook.save()
+        res.status(201).json(saved)
+    } catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+})
 app.put('/api/notebook/:id',
     async(req, res) => {
         try {
@@ -69,6 +91,64 @@ app.put('/api/notebook/:id',
         }
     })
 
+app.put('/api/location/:id',
+    async(req, res) => {
+        try {
+            const location = await Location.findByIdAndUpdate(
+                req.params.id,
+                req.body, { new: true, runValidators: true }
+            )
+
+            if (!location) {
+                return res.status(404).json({ message: 'location not found' })
+            }
+
+            res.json(location)
+        } catch (err) {
+            console.error('Failed to update location:', err.message)
+            res.status(500).json({
+                message: 'Failed to update location',
+                error: err.message,
+            })
+        }
+    })
+
+
+app.put('/api/notebookcontract/:id',
+    async(req, res) => {
+        try {
+            const contract = await NotebookContract.findByIdAndUpdate(
+                req.params.id,
+                req.body, { new: true, runValidators: true }
+            )
+
+            if (!contract) {
+                return res.status(404).json({ message: 'Notebook contract not found' })
+            }
+
+            res.json(contract)
+        } catch (err) {
+            console.error('Failed to update notebook contract:', err.message)
+            res.status(500).json({
+                message: 'Failed to update notebook contract',
+                error: err.message,
+            })
+        }
+    })
+
+app.post('/api/notebookcontract', async(req, res) => {
+    try {
+        const contract = new NotebookContract(req.body)
+        const saved = await contract.save()
+        res.status(201).json(saved)
+    } catch (err) {
+        console.error('Failed to create contract:', err.message)
+        res.status(500).json({
+            message: 'Failed to create contract',
+            error: err.message,
+        })
+    }
+})
 app.delete('/api/notebook/:id',
     async(req, res) => {
         try {
@@ -88,6 +168,43 @@ app.delete('/api/notebook/:id',
         }
     })
 
+app.delete('/api/notebookcontract/:id',
+    async(req, res) => {
+        try {
+            const contract = await NotebookContract.findByIdAndDelete(req.params.id)
+
+            if (!contract) {
+                return res.status(404).json({ message: 'Notebook contract not found' })
+            }
+
+            res.json({ message: 'Notebook contract deleted', id: req.params.id })
+        } catch (err) {
+            console.error('Failed to delete notebook contract:', err.message)
+            res.status(500).json({
+                message: 'Failed to delete notebook contract',
+                error: err.message,
+            })
+        }
+    })
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
+app.delete('/api/location/:id',
+    async(req, res) => {
+        try {
+            const location = await Location.findByIdAndDelete(req.params.id)
+
+            if (!location) {
+                return res.status(404).json({ message: 'Location not found' })
+            }
+
+            res.json({ message: 'Location deleted', id: req.params.id })
+        } catch (err) {
+            console.error('Failed to delete location:', err.message)
+            res.status(500).json({
+                message: 'Failed to delete location',
+                error: err.message,
+            })
+        }
+    })

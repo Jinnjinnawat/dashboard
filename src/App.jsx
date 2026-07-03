@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 import DashboardPage from "./page/DashboardPage";
+import ContractPage from "./page/ContractPage";
 import LocationPage from "./page/LocationPage";
 import NotebookPage from "./page/์NotebookPage";
 
@@ -16,6 +17,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/notebook" element={<NotebookPage />} />
+            <Route path="/contract" element={<ContractPage />} />
             <Route path="/location" element={<LocationPage />} />
           </Routes>
         </main>
