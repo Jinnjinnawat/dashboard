@@ -6,7 +6,7 @@ import DashboardPage from "./page/DashboardPage";
 import ContractPage from "./page/ContractPage";
 import LocationPage from "./page/LocationPage";
 import NotebookPage from "./page/์NotebookPage";
-
+import Departments from "./page/Departments";
 export default function App() {
   return (
     <div className="flex min-h-screen bg-surface">
@@ -19,6 +19,7 @@ export default function App() {
             <Route path="/notebook" element={<NotebookPage />} />
             <Route path="/contract" element={<ContractPage />} />
             <Route path="/location" element={<LocationPage />} />
+            <Route path="/department" element={<Departments />} />
           </Routes>
         </main>
       </div>

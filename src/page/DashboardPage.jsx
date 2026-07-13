@@ -3,18 +3,26 @@ import { ShoppingBag, Wallet, Clock, Users } from "lucide-react";
 import Sidebar from "../components/Sidebar.jsx";
 import Topbar from "../components/Topbar.jsx";
 import StatCard from "../components/StatCard.jsx";
-import DataTable from "../components/DataTable.jsx";
+import DataTableDashboard from "../components/DataTableDashboard.jsx";
 import { orders, summary } from "../data/orders.js";
 
+const COLUMNS = [
+  { key: "NotebookID", label: "Notebook ID" },
+  { key: "Brand", label: "Brand" },
+  { key: "Model", label: "Model" },
+  { key: "location.LocationName", label: "Location" },
+  { key: "contract.ContractNo", label: "Contract No" },
+  { key: "contract.Vendor", label: "Vendor" },
+]
 export default function App() {
   const [activeKey, setActiveKey] = useState("orders");
 
   return (
     <div className="flex min-h-screen bg-surface">
-      
+
 
       <div className="flex-1 min-w-0">
-        
+
 
         <main className="px-5 lg:px-8 py-7 max-w-[1400px]">
           {/* หัวข้อหน้า */}
@@ -62,7 +70,11 @@ export default function App() {
           </div>
 
           {/* ตารางข้อมูล */}
-          <DataTable data={orders} />
+          <DataTableDashboard
+            columns={COLUMNS}
+            apiUrl="http://localhost:5000/api/notebook/full"
+            title="รายการ Notebook"
+          />
         </main>
       </div>
     </div>

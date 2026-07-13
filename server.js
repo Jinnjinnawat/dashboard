@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 import Notebook from './src/models/notebook.js'
 import Location from './src/models/Location.js'
 import NotebookContract from "./src/models/notebookcontract.js";
+import Departments from "./src/models/departments.js"
 dotenv.config()
 
 const app = express()
@@ -30,6 +31,21 @@ app.get('/api/notebook',
             })
         }
     })
+app.get('/api/department',
+    async(req, res) => {
+        try {
+            const department = await Departments.find()
+            res.json(department)
+        } catch (err) {
+            console.error('Failed to fetch notebooks:', err.message)
+            res.status(500).json({
+                message: 'Failed to fetch notebooks',
+                error: err.message,
+            })
+        }
+    })
+
+
 
 const getLocations = async(req, res) => {
     try {
@@ -69,6 +85,22 @@ app.post('/api/notebook', async(req, res) => {
         res.status(500).json({ message: err.message })
     }
 })
+
+app.post('/api/location', async(req, res) => {
+    try {
+        const location = new Location(req.body)
+        const saved = await location.save()
+        res.status(201).json(saved)
+    } catch (err) {
+        console.error('Failed to create location:', err.message)
+        res.status(500).json({
+            message: 'Failed to create location',
+            error: err.message,
+        })
+    }
+})
+
+
 app.put('/api/notebook/:id',
     async(req, res) => {
         try {
@@ -112,6 +144,48 @@ app.put('/api/location/:id',
             })
         }
     })
+app.get('/api/notebook/full', async(req, res) => {
+    try {
+        const result = await Notebook.aggregate([
+
+            {
+                $lookup: {
+                    from: "location",
+                    localField: "LocationID",
+                    foreignField: "LocationID",
+                    as: "location"
+                }
+            },
+            { $unwind: { path: "$location", preserveNullAndEmptyArrays: true } },
+
+            // Join contract
+            {
+                $lookup: {
+                    from: "notebookcontract",
+                    localField: "ContractID",
+                    foreignField: "ContractID",
+                    as: "contract"
+                }
+            },
+            { $unwind: { path: "$contract", preserveNullAndEmptyArrays: true } },
+
+            // เลือก field ที่อยากแสดง
+            {
+                $project: {
+                    NotebookID: 1,
+                    Brand: 1,
+                    Model: 1,
+                    "location.LocationName": 1,
+                    "contract.ContractNo": 1,
+                    "contract.Vendor": 1,
+                }
+            }
+        ])
+        res.json(result)
+    } catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+})
 
 
 app.put('/api/notebookcontract/:id',
@@ -187,9 +261,7 @@ app.delete('/api/notebookcontract/:id',
         }
     })
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
-})
+
 app.delete('/api/location/:id',
     async(req, res) => {
         try {
@@ -208,3 +280,7 @@ app.delete('/api/location/:id',
             })
         }
     })
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+})

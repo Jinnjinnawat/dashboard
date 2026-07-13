@@ -20,7 +20,8 @@ const NAV_ITEMS = [
     children: [
       { key: "notebook", label: "ข้อมูล Notebook", path: "/notebook" },
       { key: "contract", label: "ข้อมูล Contract", path: "/contract" },
-      { key: "location", label: "ข้อมูล Location", path: "/location", icon: MapPin },
+      { key: "location", label: "ข้อมูล Location", path: "/location"},
+      { key: "departments", label: "ข้อมูล departments", path: "/department"},
     ],
   },
   { key: "customers", label: "ลูกค้า", icon: Users },
