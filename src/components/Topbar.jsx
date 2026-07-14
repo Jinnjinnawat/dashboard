@@ -3,7 +3,7 @@ import { Search, Bell, ChevronDown } from "lucide-react";
 export default function Topbar() {
   return (
     <header className="sticky top-0 z-10 bg-surface-card/95 backdrop-blur border-b border-surface-border">
-      <div className="flex items-center justify-between gap-4 px-6 lg:px-8 h-16">
+      <div className="flex items-center justify-between gap-4 px-6 pl-14  lg:px-8 h-16">
         {/* ช่องค้นหาแบบรวม (global) */}
         <div className="relative flex-1 max-w-sm">
           <Search
