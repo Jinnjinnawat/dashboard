@@ -23,7 +23,7 @@ const ADD_FIELDS = [
     label: "Notebook ID",
     autoGenerate: true,
     prefix: "NB",
-    hidden: true,         // ✅ ซ่อน ไม่แสดงในฟอร์ม
+    hidden: true,         
   },
   { key: "SerialNumber", label: "Serial Number", placeholder: "SN-XXXXXXXXXX" },
   { key: "Brand",        label: "Brand",         placeholder: "Dell, HP, Lenovo..." },

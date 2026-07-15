@@ -17,6 +17,13 @@ const EDIT_FIELDS = [
 ];
 // เพิ่ม ADD_FIELDS ก่อน export default
 const ADD_FIELDS = [
+   {
+    key: "ContractID",
+    label: "ContractID",
+    autoGenerate: true,
+    prefix: "CT",
+    hidden: true,         
+  },
   { key: "ContractID", label: "Contract ID", placeholder: "CTR-XXXX" },
   { key: "ContractNo", label: "Contract No", placeholder: "เลขที่สัญญา" },
   { key: "Vendor",     label: "Vendor",      placeholder: "ชื่อผู้ขาย", fullWidth: true },

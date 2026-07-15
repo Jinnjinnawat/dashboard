@@ -5,10 +5,16 @@ const COLUMNS = [
   { key: "LocationName", label: "Location Name" },
 ];
 const ADD_FIELDS = [
-  { key: "LocationID", label: "Location ID" },
-  { key: "LocationName", label: "Location Name" },
-];
-
+  {
+    key: "LocationID",
+    label: "Location ID",
+    autoGenerate: true,
+    prefix: "LC",
+    readOnly: true,
+    hidden: true, 
+  },
+  { key: "LocationName", label: "Location Name", placeholder: "ห้องเซิร์ฟเวอร์" },
+]
 export default function LocationPage() {
   return (
     <div className="flex min-h-screen bg-surface">

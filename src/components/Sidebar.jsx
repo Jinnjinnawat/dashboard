@@ -9,6 +9,7 @@ import {
   Users,
   Menu,
   X,
+  Book
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -23,10 +24,10 @@ const NAV_ITEMS = [
       { key: "notebook", label: "ข้อมูล Notebook", path: "/notebook" },
       { key: "contract", label: "ข้อมูล Contract", path: "/contract" },
       { key: "location", label: "ข้อมูล Location", path: "/location" },
-      { key: "departments", label: "ข้อมูล departments", path: "/department" },
+      { key: "departments", label: "ข้อมูล Departments", path: "/department" },
     ],
   },
-  { key: "customers", label: "ข้อมูลการยืม", icon: Users },
+  { key: "customers", label: "ข้อมูลการยืม",icon:Book }
   
   
 ];

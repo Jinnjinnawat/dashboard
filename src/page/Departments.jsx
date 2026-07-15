@@ -11,7 +11,15 @@ const EDIT_FIELDS = [
 ];
   
 const ADD_FIELDS = [
-    {key :"DepartmentID",label:"DepartmentID"},
+  {
+    key: "DepartmentID",
+    label: "DepartmentID",
+    autoGenerate: true,
+    prefix: "DP",
+    readOnly: true,
+    hidden: true, 
+  },
+   
      {key :"DepartmentName",label:"DepartmentName"}
 ];
 

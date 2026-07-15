@@ -5,7 +5,7 @@ import dotenv from 'dotenv'
 import Notebook from './src/models/notebook.js'
 import Location from './src/models/Location.js'
 import NotebookContract from "./src/models/notebookcontract.js";
-import Departments from "./src/models/departments.js"
+import Department from "./src/models/departments.js"
 dotenv.config()
 
 const app = express()
@@ -34,7 +34,7 @@ app.get('/api/notebook',
 app.get('/api/department',
     async(req, res) => {
         try {
-            const department = await Departments.find()
+            const department = await Department.find()
             res.json(department)
         } catch (err) {
             console.error('Failed to fetch notebooks:', err.message)
@@ -45,7 +45,33 @@ app.get('/api/department',
         }
     })
 
+app.delete('/api/department/:id',
+    async(req, res) => {
+        try {
+            const department = await Department.findByIdAndDelete(req.params.id)
 
+            if (!department) {
+                return res.status(404).json({ message: 'department not found' })
+            }
+
+            res.json({ message: 'department deleted', id: req.params.id })
+        } catch (err) {
+            console.error('Failed to delete department:', err.message)
+            res.status(500).json({
+                message: 'Failed to delete department',
+                error: err.message,
+            })
+        }
+    })
+app.post('/api/department', async(req, res) => {
+    try {
+        const department = new Department(req.body)
+        const saved = await department.save()
+        res.status(201).json(saved)
+    } catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+})
 
 const getLocations = async(req, res) => {
     try {
@@ -99,7 +125,27 @@ app.post('/api/location', async(req, res) => {
         })
     }
 })
+app.put('/api/department/:id',
+    async(req, res) => {
+        try {
+            const department = await Department.findByIdAndUpdate(
+                req.params.id,
+                req.body, { new: true, runValidators: true }
+            )
 
+            if (!department) {
+                return res.status(404).json({ message: 'department not found' })
+            }
+
+            res.json(department)
+        } catch (err) {
+            console.error('Failed to update department:', err.message)
+            res.status(500).json({
+                message: 'Failed to update department',
+                error: err.message,
+            })
+        }
+    })
 
 app.put('/api/notebook/:id',
     async(req, res) => {
@@ -169,7 +215,7 @@ app.get('/api/notebook/full', async(req, res) => {
             },
             { $unwind: { path: "$contract", preserveNullAndEmptyArrays: true } },
 
-            // เลือก field ที่อยากแสดง
+
             {
                 $project: {
                     NotebookID: 1,

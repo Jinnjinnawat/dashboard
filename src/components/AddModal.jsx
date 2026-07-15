@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"  // ✅ ลบ readOnly ออก ไม่มีใน React
+import { useEffect, useState } from "react"  
 import { Loader2, Plus, X } from "lucide-react"
 import axios from "axios"
 
@@ -25,7 +25,7 @@ export default function AddModal({ fields, apiUrl, titleLabel = "เพิ่ม
           const paddedNumber = String(count).padStart(3, "0")
           setForm((prev) => ({
             ...prev,
-            [idField.key]: `${idField.prefix}-${paddedNumber}`,
+            [idField.key]: `${idField.prefix}${paddedNumber}`,
           }))
         }
 
