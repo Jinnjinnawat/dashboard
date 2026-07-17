@@ -30,12 +30,7 @@ export default function Topbar() {
           <div className="h-8 w-px bg-surface-border" />
 
           <button className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-full bg-navy-950 flex items-center justify-center font-display text-[11px] font-medium text-white">
-              กว
-            </div>
-            <span className="text-sm font-medium text-ink-700 hidden lg:inline">
-              กวินทร์ อมรเดช
-            </span>
+            
             <ChevronDown
               size={14}
               strokeWidth={2}

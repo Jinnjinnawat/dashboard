@@ -21,7 +21,7 @@ export default function App() {
             <Route path="/contract" element={<ContractPage />} />
             <Route path="/location" element={<LocationPage />} />
             <Route path="/department" element={<Departments />} />
-            <Route path="/borrow" element={<Departments />} />
+            <Route path="/borrow" element={<BorrowPage />} />
           </Routes>
         </main>
       </div>

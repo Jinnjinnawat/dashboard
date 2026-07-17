@@ -27,7 +27,7 @@ const NAV_ITEMS = [
       { key: "departments", label: "ข้อมูล Departments", path: "/department" },
     ],
   },
-  { key: "customers", label: "ข้อมูลการยืม",icon:Book }
+  { key: "customers", label: "ข้อมูลการยืม",icon:Book ,path:"/borrow"}
   
   
 ];

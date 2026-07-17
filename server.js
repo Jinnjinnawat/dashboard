@@ -5,7 +5,8 @@ import dotenv from 'dotenv'
 import Notebook from './src/models/notebook.js'
 import Location from './src/models/Location.js'
 import NotebookContract from "./src/models/notebookcontract.js";
-import Department from "./src/models/departments.js"
+import Department from "./src/models/departments.js";
+import borrow from './src/models/borrow.js'
 dotenv.config()
 
 const app = express()
@@ -190,11 +191,10 @@ app.put('/api/location/:id',
             })
         }
     })
-app.get('/api/notebook/full', async(req, res) => {
-    try {
-        const result = await Notebook.aggregate([
 
-            {
+app.get('/api/notebook/full', async(req, res) => { // ✅ แก้ชื่อ route
+    try {
+        const result = await Notebook.aggregate([{
                 $lookup: {
                     from: "location",
                     localField: "LocationID",
@@ -204,7 +204,6 @@ app.get('/api/notebook/full', async(req, res) => {
             },
             { $unwind: { path: "$location", preserveNullAndEmptyArrays: true } },
 
-            // Join contract
             {
                 $lookup: {
                     from: "notebookcontract",
@@ -215,6 +214,15 @@ app.get('/api/notebook/full', async(req, res) => {
             },
             { $unwind: { path: "$contract", preserveNullAndEmptyArrays: true } },
 
+            {
+                $lookup: {
+                    from: "borrow",
+                    localField: "NotebookID",
+                    foreignField: "NotebookID",
+                    as: "borrow"
+                }
+            },
+            { $unwind: { path: "$borrow", preserveNullAndEmptyArrays: true } },
 
             {
                 $project: {
@@ -224,6 +232,9 @@ app.get('/api/notebook/full', async(req, res) => {
                     "location.LocationName": 1,
                     "contract.ContractNo": 1,
                     "contract.Vendor": 1,
+                    "borrow.BorrowID": 1,
+                    "borrow.Department": 1,
+                    "borrow.Status": 1,
                 }
             }
         ])
@@ -232,8 +243,69 @@ app.get('/api/notebook/full', async(req, res) => {
         res.status(500).json({ message: err.message })
     }
 })
+app.get('/api/borrow/full', async(req, res) => {
+    try {
+        const result = await borrow.aggregate([
 
+            // ---- Join Notebook ----
+            {
+                $lookup: {
+                    from: "notebook",
+                    localField: "NotebookID",
+                    foreignField: "NotebookID",
+                    as: "notebook"
+                }
+            },
+            { $unwind: { path: "$notebook", preserveNullAndEmptyArrays: true } },
 
+            // ✅ Join Department ผ่าน DepartmentID จาก Borrow
+            {
+                $lookup: {
+                    from: "department", // ชื่อ collection ใน Atlas
+                    localField: "DepartmentID", // field ใน Borrow
+                    foreignField: "DepartmentID", // field ใน Department
+                    as: "department"
+                }
+            },
+            { $unwind: { path: "$department", preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: "location",
+                    localField: "notebook.LocationID", // ดึง LocationID จาก notebook
+                    foreignField: "LocationID",
+                    as: "location"
+                }
+            },
+            { $unwind: { path: "$location", preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: "notebookcontract",
+                    localField: "notebook.ContractID", // ดึง LocationID จาก notebook
+                    foreignField: "ContractID",
+                    as: "contract"
+                }
+            },
+            { $unwind: { path: "$contract", preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    BorrowID: 1,
+                    Status: 1,
+                    "notebook.SerialNumber": 1,
+                    "notebook.Brand": 1,
+                    "notebook.Model": 1,
+                    "department.DepartmentName": 1,
+                    "contract.ContractNo": 1,
+                    "location.LocationName": 1, // ✅ แสดง LocationName
+                }
+            }
+        ])
+        res.json(result)
+
+    } catch (err) {
+        console.error('ERROR:', err.message)
+        console.error('Borrow full error:', err.message)
+    }
+})
 app.put('/api/notebookcontract/:id',
     async(req, res) => {
         try {
