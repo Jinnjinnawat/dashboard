@@ -25,6 +25,7 @@ const NAV_ITEMS = [
       { key: "contract", label: "ข้อมูล Contract", path: "/contract" },
       { key: "location", label: "ข้อมูล Location", path: "/location" },
       { key: "departments", label: "ข้อมูล Departments", path: "/department" },
+      { key: "allinone", label: "ข้อมูล All-in-one", path: "/allinone" },
     ],
   },
   { key: "customers", label: "ข้อมูลการยืม",icon:Book ,path:"/borrow"}

@@ -7,6 +7,8 @@ import Location from './src/models/Location.js'
 import NotebookContract from "./src/models/notebookcontract.js";
 import Department from "./src/models/departments.js";
 import borrow from './src/models/borrow.js'
+import allinone from './src/models/allinone.js'
+
 dotenv.config()
 
 const app = express()
@@ -38,9 +40,22 @@ app.get('/api/department',
             const department = await Department.find()
             res.json(department)
         } catch (err) {
-            console.error('Failed to fetch notebooks:', err.message)
+            console.error('Failed to fetch department:', err.message)
             res.status(500).json({
-                message: 'Failed to fetch notebooks',
+                message: 'Failed to fetch department',
+                error: err.message,
+            })
+        }
+    })
+app.get('/api/allinone',
+    async(req, res) => {
+        try {
+            const Allinone = await allinone.find()
+            res.json(Allinone)
+        } catch (err) {
+            console.error('Failed to fetch allinone:', err.message)
+            res.status(500).json({
+                message: 'Failed to fetch allinone',
                 error: err.message,
             })
         }
@@ -126,6 +141,7 @@ app.post('/api/location', async(req, res) => {
         })
     }
 })
+
 app.put('/api/department/:id',
     async(req, res) => {
         try {
@@ -327,7 +343,54 @@ app.put('/api/notebookcontract/:id',
             })
         }
     })
+app.get('/api/dashboard/summary', async(req, res) => {
+    try {
+        const [
+            totalNotebook,
+            totalBorrow,
+            totalLocation,
+            totalDepartment,
+            totalContract,
+            brandStats, // นับ Notebook แต่ละ Brand
+            statusStats, // นับ Borrow แต่ละ Status
+            locationStats, // นับ Notebook แต่ละ Location
+        ] = await Promise.all([
+            Notebook.countDocuments(),
+            borrow.countDocuments(),
+            Location.countDocuments(),
+            Department.countDocuments(),
+            NotebookContract.countDocuments(),
 
+            Notebook.aggregate([
+                { $group: { _id: "$Brand", count: { $sum: 1 } } },
+                { $project: { brand: "$_id", count: 1, _id: 0 } }
+            ]),
+
+            borrow.aggregate([
+                { $group: { _id: "$Status", count: { $sum: 1 } } },
+                { $project: { status: "$_id", count: 1, _id: 0 } }
+            ]),
+
+            Notebook.aggregate([
+                { $group: { _id: "$LocationID", count: { $sum: 1 } } },
+                { $project: { location: "$_id", count: 1, _id: 0 } }
+            ]),
+        ])
+
+        res.json({
+            totalNotebook,
+            totalBorrow,
+            totalLocation,
+            totalDepartment,
+            totalContract,
+            brandStats,
+            statusStats,
+            locationStats,
+        })
+    } catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+})
 app.post('/api/notebookcontract', async(req, res) => {
     try {
         const contract = new NotebookContract(req.body)
