@@ -47,6 +47,7 @@ export default function DataTableDashboard({
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : res.data?.data
         setRows(Array.isArray(data) ? data : [])
+        
       })
       .catch((err) => setError(err.response?.data?.message || err.message || "ไม่สามารถดึงข้อมูลได้"))
       .finally(() => setLoading(false))

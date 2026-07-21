@@ -21,11 +21,11 @@ const NAV_ITEMS = [
     label: "ฐานข้อมูล",
     icon: Database,
     children: [
-      { key: "notebook", label: "ข้อมูล Notebook", path: "/notebook" },
+      { key: "notebook", label: "ข้อมูล Notebook All in one", path: "/notebook" },
       { key: "contract", label: "ข้อมูล Contract", path: "/contract" },
       { key: "location", label: "ข้อมูล Location", path: "/location" },
       { key: "departments", label: "ข้อมูล Departments", path: "/department" },
-      { key: "allinone", label: "ข้อมูล All-in-one", path: "/allinone" },
+      //{ key: "allinone", label: "ข้อมูล All-in-one", path: "/allinone" },
     ],
   },
   { key: "customers", label: "ข้อมูลการยืม",icon:Book ,path:"/borrow"}

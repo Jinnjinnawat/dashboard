@@ -6,8 +6,10 @@ import Notebook from './src/models/notebook.js'
 import Location from './src/models/Location.js'
 import NotebookContract from "./src/models/notebookcontract.js";
 import Department from "./src/models/departments.js";
-import borrow from './src/models/borrow.js'
+import Borrow from "./src/models/borrow.js";
 import allinone from './src/models/allinone.js'
+import Type from './src/models/type.js'
+
 
 dotenv.config()
 
@@ -30,6 +32,19 @@ app.get('/api/notebook',
             console.error('Failed to fetch notebooks:', err.message)
             res.status(500).json({
                 message: 'Failed to fetch notebooks',
+                error: err.message,
+            })
+        }
+    })
+app.get('/api/type',
+    async(req, res) => {
+        try {
+            const type = await Type.find()
+            res.json(type)
+        } catch (err) {
+            console.error('Failed to fetch type:', err.message)
+            res.status(500).json({
+                message: 'Failed to fetch type',
                 error: err.message,
             })
         }
@@ -208,110 +223,74 @@ app.put('/api/location/:id',
         }
     })
 
-app.get('/api/notebook/full', async(req, res) => { // ✅ แก้ชื่อ route
-    try {
-        const result = await Notebook.aggregate([{
-                $lookup: {
-                    from: "location",
-                    localField: "LocationID",
-                    foreignField: "LocationID",
-                    as: "location"
-                }
-            },
-            { $unwind: { path: "$location", preserveNullAndEmptyArrays: true } },
 
-            {
-                $lookup: {
-                    from: "notebookcontract",
-                    localField: "ContractID",
-                    foreignField: "ContractID",
-                    as: "contract"
-                }
-            },
-            { $unwind: { path: "$contract", preserveNullAndEmptyArrays: true } },
-
-            {
-                $lookup: {
-                    from: "borrow",
-                    localField: "NotebookID",
-                    foreignField: "NotebookID",
-                    as: "borrow"
-                }
-            },
-            { $unwind: { path: "$borrow", preserveNullAndEmptyArrays: true } },
-
-            {
-                $project: {
-                    NotebookID: 1,
-                    Brand: 1,
-                    Model: 1,
-                    "location.LocationName": 1,
-                    "contract.ContractNo": 1,
-                    "contract.Vendor": 1,
-                    "borrow.BorrowID": 1,
-                    "borrow.Department": 1,
-                    "borrow.Status": 1,
-                }
-            }
-        ])
-        res.json(result)
-    } catch (err) {
-        res.status(500).json({ message: err.message })
-    }
-})
 app.get('/api/borrow/full', async(req, res) => {
     try {
-        const result = await borrow.aggregate([
+        const result = await Borrow.aggregate([
 
-            // ---- Join Notebook ----
+            // Join Asset
             {
                 $lookup: {
-                    from: "notebook",
-                    localField: "NotebookID",
-                    foreignField: "NotebookID",
-                    as: "notebook"
+                    from: "asste",
+                    localField: "AssetID",
+                    foreignField: "AssetID",
+                    as: "asste"
                 }
             },
-            { $unwind: { path: "$notebook", preserveNullAndEmptyArrays: true } },
+            { $unwind: { path: "$asste", preserveNullAndEmptyArrays: true } },
 
-            // ✅ Join Department ผ่าน DepartmentID จาก Borrow
+            // Join Department
             {
                 $lookup: {
-                    from: "department", // ชื่อ collection ใน Atlas
-                    localField: "DepartmentID", // field ใน Borrow
-                    foreignField: "DepartmentID", // field ใน Department
+                    from: "department",
+                    localField: "DepartmentID",
+                    foreignField: "DepartmentID",
                     as: "department"
                 }
             },
             { $unwind: { path: "$department", preserveNullAndEmptyArrays: true } },
+
+            {
+                $lookup: {
+                    from: "type",
+                    localField: "asste.Type",
+                    foreignField: "Type",
+                    as: "type"
+                }
+            },
+            { $unwind: { path: "$type", preserveNullAndEmptyArrays: true } },
             {
                 $lookup: {
                     from: "location",
-                    localField: "notebook.LocationID", // ดึง LocationID จาก notebook
+                    localField: "asste.LocationID", // ✅ แก้ตรงนี้
                     foreignField: "LocationID",
                     as: "location"
                 }
             },
             { $unwind: { path: "$location", preserveNullAndEmptyArrays: true } },
+
+            // Join Contract
             {
                 $lookup: {
                     from: "notebookcontract",
-                    localField: "notebook.ContractID", // ดึง LocationID จาก notebook
+                    localField: "asste.ContractID",
                     foreignField: "ContractID",
                     as: "contract"
                 }
             },
             { $unwind: { path: "$contract", preserveNullAndEmptyArrays: true } },
+
             {
                 $project: {
                     BorrowID: 1,
                     Status: 1,
-                    "notebook.SerialNumber": 1,
-                    "notebook.Brand": 1,
-                    "notebook.Model": 1,
+                    "asste.SerialNumber": 1,
+                    "asste.Brand": 1,
+                    "asste.Model": 1,
                     "department.DepartmentName": 1,
                     "contract.ContractNo": 1,
-                    "location.LocationName": 1, // ✅ แสดง LocationName
+                    "type.Typename": 1,
+                    "location.LocationName": 1,
                 }
             }
         ])
@@ -319,7 +298,7 @@ app.get('/api/borrow/full', async(req, res) => {
 
     } catch (err) {
         console.error('ERROR:', err.message)
-        console.error('Borrow full error:', err.message)
+        res.status(500).json({ message: err.message })
     }
 })
 app.put('/api/notebookcontract/:id',
@@ -444,24 +423,32 @@ app.delete('/api/notebookcontract/:id',
 
 
 app.delete('/api/location/:id',
-    async(req, res) => {
-        try {
-            const location = await Location.findByIdAndDelete(req.params.id)
+        async(req, res) => {
+            try {
+                const location = await Location.findByIdAndDelete(req.params.id)
 
-            if (!location) {
-                return res.status(404).json({ message: 'Location not found' })
+                if (!location) {
+                    return res.status(404).json({ message: 'Location not found' })
+                }
+
+                res.json({ message: 'Location deleted', id: req.params.id })
+            } catch (err) {
+                console.error('Failed to delete location:', err.message)
+                res.status(500).json({
+                    message: 'Failed to delete location',
+                    error: err.message,
+                })
             }
-
-            res.json({ message: 'Location deleted', id: req.params.id })
-        } catch (err) {
-            console.error('Failed to delete location:', err.message)
-            res.status(500).json({
-                message: 'Failed to delete location',
-                error: err.message,
-            })
-        }
-    })
-
+        })
+    // เพิ่ม route นี้ชั่วคราว
+app.get('/api/borrow/test', async(req, res) => {
+    try {
+        const result = await borrow.find()
+        res.json(result)
+    } catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+})
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })

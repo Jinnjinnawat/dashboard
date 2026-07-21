@@ -1,16 +1,17 @@
 import DataTable from "../components/DataTable";
 
 const COLUMNS = [
-  { key: "NotebookID", label: "Notebook ID" },
+  { key: "AssetID", label: "Asset ID" },
   { key: "SerialNumber", label: "Serial Number" },
   { key: "Brand", label: "Brand" },
   { key: "Model", label: "Model" },
   { key: "LocationID", label: "Location" },
+  { key: "Type", label: "Type" },
   { key: "ContractID", label: "Contract" },
 ];
 
 const EDIT_FIELDS = [
-  { key: "NotebookID", label: "Notebook ID", placeholder: "NB-XXXX" },
+  { key: "AssetID", label: "Notebook ID", placeholder: "NB-XXXX" },
   { key: "SerialNumber", label: "Serial Number", placeholder: "SN-XXXXXXXXXX" },
   { key: "Brand", label: "Brand", placeholder: "Dell, HP, Lenovo..." },
   { key: "Model", label: "Model", placeholder: "Latitude 5540", fullWidth: true },
@@ -19,10 +20,10 @@ const EDIT_FIELDS = [
 ];
 const ADD_FIELDS = [
   {
-    key: "NotebookID",
-    label: "Notebook ID",
+    key: "AssetID",
+    label: "Asset ID",
     autoGenerate: true,
-    prefix: "NB",
+    prefix: "AS",
     hidden: true,         
   },
   { key: "SerialNumber", label: "Serial Number", placeholder: "SN-XXXXXXXXXX" },
@@ -44,6 +45,14 @@ const ADD_FIELDS = [
     optionsValue: "ContractID",                               // ✅ ค่าที่จะบันทึก
     optionsLabel: "ContractNo",                               // ✅ ข้อความที่แสดง
   },
+  {
+    key: "AssetID",
+    label: "Asset",
+    type: "select",                                           // ✅ dropdown
+    optionsUrl: "http://localhost:5000/api/type", 
+    optionsValue: "AssetID",                               // ✅ ค่าที่จะบันทึก
+    optionsLabel: "Typename",                               // ✅ ข้อความที่แสดง
+  },
 ]
 export default function NotebookPage() {
   return (
@@ -54,7 +63,7 @@ export default function NotebookPage() {
             columns={COLUMNS}
             editFields={EDIT_FIELDS}
             apiUrl="http://localhost:5000/api/notebook"
-            title="รายการ Notebook"
+            title="รายการ Notebook และ All in one"
             editable={true}
             addFields={ADD_FIELDS}
             deleteTitleKey="NotebookID"
