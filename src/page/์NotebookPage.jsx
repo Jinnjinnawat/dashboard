@@ -67,6 +67,7 @@ export default function NotebookPage() {
             editable={true}
             addFields={ADD_FIELDS}
             deleteTitleKey="NotebookID"
+            
           />
         </main>
       </div>

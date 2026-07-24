@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react"
 import {
   AlertCircle, ArrowUpDown, ChevronLeft, ChevronRight,
-  Loader2, Pencil, Search, Trash2, Plus, 
+  Filter, Loader2, Pencil, Search, Trash2, Plus,
 } from "lucide-react"
 import axios from "axios"
-import EditModal from "./EditModal"    // ✅ import
-import DeleteModal from "./DeleteModal"  // ✅ import
+import EditModal from "./EditModal"
+import DeleteModal from "./DeleteModal"
 import AddModal from "./AddModal"
+
 const PAGE_SIZE = 8
 
 export default function DataTable({
@@ -17,23 +18,25 @@ export default function DataTable({
   editFields = columns,
   deleteTitleKey = columns[0]?.key,
   addFields = [],
+  filterField = null,
 }) {
-  const [rows, setRows] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [query, setQuery] = useState("")
-  const [page, setPage] = useState(1)
-  const [sortField, setSortField] = useState(columns[0]?.key || "")
-  const [sortDesc, setSortDesc] = useState(false)
-  const [showAdd, setShowAdd] = useState(false)
-  // modal state
-  const [editingRow, setEditingRow] = useState(null)
+  const [rows, setRows]               = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [error, setError]             = useState(null)
+  const [query, setQuery]             = useState("")
+  const [page, setPage]               = useState(1)
+  const [sortField, setSortField]     = useState(columns[0]?.key || "")
+  const [sortDesc, setSortDesc]       = useState(false)
+  const [showAdd, setShowAdd]         = useState(false)
+  const [filterValue, setFilterValue] = useState("ทั้งหมด")
+  const [editingRow, setEditingRow]   = useState(null)
   const [deletingRow, setDeletingRow] = useState(null)
-  const [form, setForm] = useState({})
-  const [modalError, setModalError] = useState(null)
-  const [saving, setSaving] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const [form, setForm]               = useState({})
+  const [modalError, setModalError]   = useState(null)
+  const [saving, setSaving]           = useState(false)
+  const [deleting, setDeleting]       = useState(false)
 
+  // ---- fetch ----
   useEffect(() => {
     if (!apiUrl) { setError("API URL is missing"); setLoading(false); return }
     setLoading(true); setError(null)
@@ -48,23 +51,35 @@ export default function DataTable({
 
   useEffect(() => { setSortField(columns[0]?.key || ""); setPage(1) }, [columns])
 
+  // ---- filter options ----
+  const filterOptions = useMemo(() => {
+    if (!filterField) return []
+    const values = [...new Set(rows.map((row) => row[filterField]).filter(Boolean))].sort()
+    return ["ทั้งหมด", ...values]
+  }, [rows, filterField])
+
+  // ---- filter + sort ----
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const matched = rows.filter((row) =>
-      !q || columns.some((col) => String(row[col.key] || "").toLowerCase().includes(q))
-    )
+    const matched = rows.filter((row) => {
+      const matchesQuery = !q || columns.some((col) =>
+        String(row[col.key] || "").toLowerCase().includes(q)
+      )
+      const matchesFilter = !filterField || filterValue === "ทั้งหมด" || row[filterField] === filterValue
+      return matchesQuery && matchesFilter
+    })
     if (!sortField) return matched
     return [...matched].sort((a, b) => {
       const va = String(a[sortField] || "").toLowerCase()
       const vb = String(b[sortField] || "").toLowerCase()
       return sortDesc ? vb.localeCompare(va, "th") : va.localeCompare(vb, "th")
     })
-  }, [rows, columns, query, sortField, sortDesc])
+  }, [rows, columns, query, filterField, filterValue, sortField, sortDesc])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const totalPages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
-  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
-  const colSpan = columns.length + (editable ? 1 : 0)
+  const paginated   = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const colSpan     = columns.length + (editable ? 1 : 0)
 
   const handleSort = (field) => {
     if (sortField === field) setSortDesc((v) => !v)
@@ -77,7 +92,10 @@ export default function DataTable({
     editFields.forEach((f) => { nextForm[f.key] = row[f.key] || "" })
     setEditingRow(row); setForm(nextForm); setModalError(null)
   }
-  const closeEdit = () => { if (saving) return; setEditingRow(null); setForm({}); setModalError(null) }
+  const closeEdit = () => {
+    if (saving) return
+    setEditingRow(null); setForm({}); setModalError(null)
+  }
   const saveEdit = async () => {
     if (!editingRow?._id) return
     setSaving(true); setModalError(null)
@@ -91,8 +109,11 @@ export default function DataTable({
   }
 
   // ---- Delete handlers ----
-  const openDelete = (row) => { setDeletingRow(row); setModalError(null) }
-  const closeDelete = () => { if (deleting) return; setDeletingRow(null); setModalError(null) }
+  const openDelete  = (row) => { setDeletingRow(row); setModalError(null) }
+  const closeDelete = () => {
+    if (deleting) return
+    setDeletingRow(null); setModalError(null)
+  }
   const confirmDelete = async () => {
     if (!deletingRow?._id) return
     setDeleting(true); setModalError(null)
@@ -104,9 +125,9 @@ export default function DataTable({
       setModalError(err.response?.data?.message || err.message || "ไม่สามารถลบข้อมูลได้")
     } finally { setDeleting(false) }
   }
-    const handleAdded = (newRow) => {
-    setRows((prev) => [newRow, ...prev]) 
-  }
+
+  const handleAdded = (newRow) => { setRows((prev) => [newRow, ...prev]) }
+
   // ---- render ----
   const renderBody = () => {
     if (loading) return (
@@ -134,11 +155,14 @@ export default function DataTable({
     )
 
     return paginated.map((row, index) => (
-      <tr key={row._id || row[columns[0]?.key] || index}
+      <tr
+        key={row._id || row[columns[0]?.key] || index}
         className="border-b border-surface-border last:border-0 hover:bg-surface/60 transition-colors"
       >
         {columns.map((col) => (
-          <td key={col.key} className="px-5 py-3.5 text-ink-700">{row[col.key] || "-"}</td>
+          <td key={col.key} className="px-5 py-3.5 text-ink-700">
+            {row[col.key] || "-"}
+          </td>
         ))}
         {editable && (
           <td className="px-5 py-3.5">
@@ -171,23 +195,47 @@ export default function DataTable({
               {loading ? "กำลังโหลด..." : `ทั้งหมด ${filtered.length} รายการ`}
             </p>
           </div>
-          <div className="relative">
-            <Search size={15} strokeWidth={2} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
-            <input value={query} onChange={(e) => { setQuery(e.target.value); setPage(1) }}
-              placeholder="ค้นหา..."
-              className="w-full sm:w-64 bg-surface border border-surface-border rounded-lg pl-9 pr-3 py-2 text-sm text-ink-900 placeholder:text-ink-400 focus:bg-white transition-colors"
-            />
+
+          <div className="flex items-center gap-2">
+            {/* ช่องค้นหา */}
+            <div className="relative">
+              <Search size={15} strokeWidth={2} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
+              <input
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setPage(1) }}
+                placeholder="ค้นหา..."
+                className="w-full sm:w-64 bg-surface border border-surface-border rounded-lg pl-9 pr-3 py-2 text-sm text-ink-900 placeholder:text-ink-400 focus:bg-white transition-colors"
+              />
+            </div>
+
+            {/* ✅ dropdown filter */}
+            {filterField && filterOptions.length > 0 && (
+              <div className="relative">
+                <select
+                  value={filterValue}
+                  onChange={(e) => { setFilterValue(e.target.value); setPage(1) }}
+                  className="appearance-none bg-surface border border-surface-border rounded-lg pl-8 pr-8 py-2 text-sm text-ink-700 cursor-pointer focus:bg-white transition-colors"
+                >
+                  {filterOptions.map((v) => (
+                    <option key={v} value={v}>{v}</option>
+                  ))}
+                </select>
+                <Filter size={14} strokeWidth={2} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none" />
+              </div>
+            )}
+
+            {/* ปุ่มเพิ่มข้อมูล */}
+            {addFields.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAdd(true)}
+                className="flex items-center gap-1.5 bg-accent-500 hover:bg-accent-600 text-white text-sm font-medium rounded-lg px-3.5 py-2 transition-colors whitespace-nowrap"
+              >
+                <Plus size={15} strokeWidth={2.2} />
+                เพิ่มข้อมูล
+              </button>
+            )}
           </div>
-          {addFields.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowAdd(true)}
-              className="flex items-center gap-1.5 bg-accent-500 hover:bg-accent-600 text-white text-sm font-medium rounded-lg px-3.5 py-2 transition-colors whitespace-nowrap"
-            >
-              <Plus size={15} strokeWidth={2.2} />
-              เพิ่มข้อมูล
-            </button>
-          )}
         </div>
 
         {/* Table */}
@@ -197,7 +245,8 @@ export default function DataTable({
               <tr className="text-left text-xs uppercase tracking-wide text-ink-400 border-b border-surface-border">
                 {columns.map((col) => (
                   <th key={col.key} className="px-5 py-3 font-medium">
-                    <button onClick={() => handleSort(col.key)}
+                    <button
+                      onClick={() => handleSort(col.key)}
                       className="flex items-center gap-1 hover:text-ink-700 transition-colors"
                     >
                       {col.label}
@@ -223,13 +272,17 @@ export default function DataTable({
             จาก <span className="font-medium text-ink-700">{filtered.length}</span> รายการ
           </p>
           <div className="flex items-center gap-1.5">
-            <button onClick={() => setPage((v) => Math.max(1, v - 1))} disabled={currentPage === 1}
+            <button
+              onClick={() => setPage((v) => Math.max(1, v - 1))}
+              disabled={currentPage === 1}
               className="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-border text-ink-500 disabled:opacity-40 hover:text-ink-900 transition-colors"
             >
               <ChevronLeft size={15} strokeWidth={2} />
             </button>
             <span className="text-xs font-mono text-ink-500 px-2">{currentPage} / {totalPages}</span>
-            <button onClick={() => setPage((v) => Math.min(totalPages, v + 1))} disabled={currentPage === totalPages}
+            <button
+              onClick={() => setPage((v) => Math.min(totalPages, v + 1))}
+              disabled={currentPage === totalPages}
               className="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-border text-ink-500 disabled:opacity-40 hover:text-ink-900 transition-colors"
             >
               <ChevronRight size={15} strokeWidth={2} />
@@ -238,7 +291,6 @@ export default function DataTable({
         </div>
       </div>
 
-      {/* ✅ แยก Modal ออกเป็น component ต่างหาก */}
       <EditModal
         editingRow={editingRow}
         editFields={editFields}

@@ -1,16 +1,16 @@
 import DataTableDashboard from "../components/DataTableDashboard.jsx"
 
-// ✅ ย้ายออกมานอก function
+
 const COLUMNS = [
-  { key: "BorrowID",                 label: "รหัสการยืม" },
-  { key: "asste.SerialNumber",       label: "Serial Number" },
-  { key: "asste.Brand",              label: "ยี่ห้อ" },
-  { key: "asste.Model",              label: "รุ่น" },
-  { key: "location.LocationName",    label: "Location" },
+  { key: "BorrowID", label: "รหัสการยืม" },
+  { key: "asste.SerialNumber", label: "Serial Number" },
+  { key: "asste.Brand", label: "ยี่ห้อ" },
+  { key: "asste.Model", label: "รุ่น" },
+  { key: "location.LocationName", label: "Location" },
   { key: "department.DepartmentName", label: "แผนก" },
-  { key: "contract.ContractNo",      label: "สัญญา" },
-  { key: "type.Typename",      label: "ประเภท" },
-  { key: "Status",                   label: "สถานะ" },
+  { key: "contract.ContractNo", label: "สัญญา" },
+  { key: "type.Typename", label: "ประเภท" },
+  { key: "Status", label: "สถานะ" },
 ]
 
 export default function BorrowPage() {
@@ -22,6 +22,12 @@ export default function BorrowPage() {
             columns={COLUMNS}
             apiUrl="http://localhost:5000/api/borrow/full"
             title="รายการการเช่า"
+            filterFields={[
+              { key: "Status", label: "สถานะ" },
+              { key: "department.DepartmentName", label: "แผนก" },
+              { key: "contract.ContractNo", label: "สัญญา" },
+            ]}
+
           />
         </main>
       </div>

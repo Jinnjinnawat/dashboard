@@ -335,7 +335,7 @@ app.get('/api/dashboard/summary', async(req, res) => {
             locationStats, // นับ Notebook แต่ละ Location
         ] = await Promise.all([
             Notebook.countDocuments(),
-            borrow.countDocuments(),
+            Borrow.countDocuments(),
             Location.countDocuments(),
             Department.countDocuments(),
             NotebookContract.countDocuments(),
@@ -345,7 +345,7 @@ app.get('/api/dashboard/summary', async(req, res) => {
                 { $project: { brand: "$_id", count: 1, _id: 0 } }
             ]),
 
-            borrow.aggregate([
+            Borrow.aggregate([
                 { $group: { _id: "$Status", count: { $sum: 1 } } },
                 { $project: { status: "$_id", count: 1, _id: 0 } }
             ]),

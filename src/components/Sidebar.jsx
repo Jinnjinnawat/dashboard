@@ -16,6 +16,7 @@ import { Link, useLocation } from "react-router-dom";
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "แดชบอร์ด", icon: LayoutDashboard, path: "/" },
+   { key: "customers", label: "ข้อมูลการยืม",icon:Book ,path:"/borrow"},
   {
     key: "database",
     label: "ฐานข้อมูล",
@@ -26,9 +27,10 @@ const NAV_ITEMS = [
       { key: "location", label: "ข้อมูล Location", path: "/location" },
       { key: "departments", label: "ข้อมูล Departments", path: "/department" },
       //{ key: "allinone", label: "ข้อมูล All-in-one", path: "/allinone" },
+      { key: "type", label: "ข้อมูล Type", path: "/type" },
     ],
   },
-  { key: "customers", label: "ข้อมูลการยืม",icon:Book ,path:"/borrow"}
+ 
   
   
 ];

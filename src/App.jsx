@@ -9,6 +9,7 @@ import NotebookPage from "./page/์NotebookPage";
 import Departments from "./page/Departments";
 import BorrowPage from "./page/BorrowPage";
 import AllinonePage from "./page/Allinone";
+import TypePage from "./page/Type";
 export default function App() {
   return (
     <div className="flex min-h-screen bg-surface">
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/department" element={<Departments />} />
             <Route path="/borrow" element={<BorrowPage />} />
             <Route path="/allinone" element={<AllinonePage/>} />
+            <Route path="/type" element={<TypePage/>} />
           </Routes>
         </main>
       </div>

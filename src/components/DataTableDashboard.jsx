@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import {
   AlertCircle, ArrowUpDown, ChevronLeft, ChevronRight,
-  Loader2, Pencil, Search, Trash2, Plus,
+  Filter, Loader2, Pencil, Search, Trash2, Plus,
 } from "lucide-react"
 import axios from "axios"
 import EditModal from "./EditModal"
@@ -10,7 +10,6 @@ import AddModal from "./AddModal"
 
 const PAGE_SIZE = 8
 
-// ✅ helper อ่านค่า nested เช่น "location.LocationName"
 const getNestedValue = (obj, path) => {
   return path.split(".").reduce((acc, key) => acc?.[key], obj) ?? "-"
 }
@@ -23,21 +22,23 @@ export default function DataTableDashboard({
   editFields = columns,
   deleteTitleKey = columns[0]?.key,
   addFields = [],
+  filterFields = [],  // ✅ เปลี่ยนเป็น array [{ key: "Status", label: "สถานะ" }]
 }) {
-  const [rows, setRows]             = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [error, setError]           = useState(null)
-  const [query, setQuery]           = useState("")
-  const [page, setPage]             = useState(1)
-  const [sortField, setSortField]   = useState(columns[0]?.key || "")
-  const [sortDesc, setSortDesc]     = useState(false)
-  const [showAdd, setShowAdd]       = useState(false)
-  const [editingRow, setEditingRow] = useState(null)
+  const [rows, setRows]               = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [error, setError]             = useState(null)
+  const [query, setQuery]             = useState("")
+  const [page, setPage]               = useState(1)
+  const [sortField, setSortField]     = useState(columns[0]?.key || "")
+  const [sortDesc, setSortDesc]       = useState(false)
+  const [showAdd, setShowAdd]         = useState(false)
+  const [filterValues, setFilterValues] = useState({})  // ✅ เปลี่ยนเป็น object
+  const [editingRow, setEditingRow]   = useState(null)
   const [deletingRow, setDeletingRow] = useState(null)
-  const [form, setForm]             = useState({})
-  const [modalError, setModalError] = useState(null)
-  const [saving, setSaving]         = useState(false)
-  const [deleting, setDeleting]     = useState(false)
+  const [form, setForm]               = useState({})
+  const [modalError, setModalError]   = useState(null)
+  const [saving, setSaving]           = useState(false)
+  const [deleting, setDeleting]       = useState(false)
 
   // ---- fetch ----
   useEffect(() => {
@@ -47,7 +48,6 @@ export default function DataTableDashboard({
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : res.data?.data
         setRows(Array.isArray(data) ? data : [])
-        
       })
       .catch((err) => setError(err.response?.data?.message || err.message || "ไม่สามารถดึงข้อมูลได้"))
       .finally(() => setLoading(false))
@@ -55,21 +55,39 @@ export default function DataTableDashboard({
 
   useEffect(() => { setSortField(columns[0]?.key || ""); setPage(1) }, [columns])
 
-  // ---- filter + sort ✅ ใช้ getNestedValue ----
+  // ✅ สร้าง options ของทุก filterField
+  const filterOptions = useMemo(() => {
+    const result = {}
+    filterFields.forEach(({ key }) => {
+      const values = [...new Set(
+        rows.map((row) => getNestedValue(row, key)).filter((v) => v && v !== "-")
+      )].sort()
+      result[key] = ["ทั้งหมด", ...values]
+    })
+    return result
+  }, [rows, filterFields])
+
+  // ---- filter + sort ----
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const matched = rows.filter((row) =>
-      !q || columns.some((col) =>
+    const matched = rows.filter((row) => {
+      const matchesQuery = !q || columns.some((col) =>
         String(getNestedValue(row, col.key)).toLowerCase().includes(q)
       )
-    )
+      // ✅ เช็คทุก filterField พร้อมกัน
+      const matchesFilters = filterFields.every(({ key }) => {
+        const selected = filterValues[key] || "ทั้งหมด"
+        return selected === "ทั้งหมด" || getNestedValue(row, key) === selected
+      })
+      return matchesQuery && matchesFilters
+    })
     if (!sortField) return matched
     return [...matched].sort((a, b) => {
       const va = String(getNestedValue(a, sortField)).toLowerCase()
       const vb = String(getNestedValue(b, sortField)).toLowerCase()
       return sortDesc ? vb.localeCompare(va, "th") : va.localeCompare(vb, "th")
     })
-  }, [rows, columns, query, sortField, sortDesc])
+  }, [rows, columns, query, filterFields, filterValues, sortField, sortDesc])
 
   const totalPages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
@@ -154,13 +172,11 @@ export default function DataTableDashboard({
         key={row._id || row[columns[0]?.key] || index}
         className="border-b border-surface-border last:border-0 hover:bg-surface/60 transition-colors"
       >
-        {/* ✅ ใช้ getNestedValue แสดงค่า nested */}
         {columns.map((col) => (
           <td key={col.key} className="px-5 py-3.5 text-ink-700">
             {getNestedValue(row, col.key)}
           </td>
         ))}
-
         {editable && (
           <td className="px-5 py-3.5">
             <div className="flex items-center justify-end gap-1.5">
@@ -193,7 +209,8 @@ export default function DataTableDashboard({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* ช่องค้นหา */}
             <div className="relative">
               <Search size={15} strokeWidth={2} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
               <input
@@ -204,6 +221,30 @@ export default function DataTableDashboard({
               />
             </div>
 
+            {/* ✅ วน filterFields แสดง dropdown หลายตัว */}
+            {filterFields.map(({ key, label }) =>
+              filterOptions[key]?.length > 0 ? (
+                <div key={key} className="relative">
+                  <select
+                    value={filterValues[key] || "ทั้งหมด"}
+                    onChange={(e) => {
+                      setFilterValues((prev) => ({ ...prev, [key]: e.target.value }))
+                      setPage(1)
+                    }}
+                    className="appearance-none bg-surface border border-surface-border rounded-lg pl-8 pr-8 py-2 text-sm text-ink-700 cursor-pointer focus:bg-white transition-colors"
+                  >
+                    {filterOptions[key].map((v) => (
+                      <option key={v} value={v}>
+                        {v === "ทั้งหมด" ? `${label}: ทั้งหมด` : v}
+                      </option>
+                    ))}
+                  </select>
+                  <Filter size={14} strokeWidth={2} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none" />
+                </div>
+              ) : null
+            )}
+
+            {/* ปุ่มเพิ่มข้อมูล */}
             {addFields.length > 0 && (
               <button
                 type="button"
